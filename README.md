@@ -28,7 +28,7 @@ One ROS 2 package, `vission_sys`, with four computer-vision nodes. Each node sub
 ```
 Ros_with_computer_vision/
 └── src/vission_sys/
-    ├── config/                      # model files go here (empty for now, see "Model Files")
+    ├── config/                      # face and YOLO model files
     ├── launch/
     │   └── facedetection.launch.py  # camera + both face detectors
     ├── vission_sys/
@@ -77,19 +77,29 @@ Run `source install/setup.bash` in every new terminal.
 ---
 
 ## Model Files (config folder)
-`src/vission_sys/config/` is empty in this repo (it only contains a `.gitkeep` so Git keeps the folder). Put the model files there. `setup.py` copies these five files at build time:
+All model files belong in `src/vission_sys/config/`. The YOLO `.pt` weights are stored with Git LFS because `yolo11x.pt` is larger than GitHub's 100 MB per-file limit. Install Git LFS before cloning, or pull the model files after cloning:
+
+```bash
+sudo apt update
+sudo apt install git-lfs
+git lfs install
+git lfs pull
+```
+
+The `.pt` files are checked out into `src/vission_sys/config/` by Git LFS; do not put them in the ROS `install/` directory. If you need to download the YOLO11x weight manually, get `yolo11x.pt` from the [official Ultralytics assets releases](https://github.com/ultralytics/assets/releases) and save it to `src/vission_sys/config/yolo11x.pt`.
+
+The package installs these runtime files at build time:
 
 | File | Used by |
 |---|---|
 | `haarcascade_frontalface_default.xml` | Face Detection (Haar Cascade) |
 | `deploy.prototxt.txt` | Face Detection (DNN) |
 | `res10_300x300_ssd_iter_140000.caffemodel` | Face Detection (DNN) |
-| `yolo11x.pt` | Object Detection and Tracking (YOLO) |
-| `coco.yaml` | Object Detection and Tracking (YOLO) |
+| `yolo11n.pt` | Object Detection and Tracking (YOLO; loaded by the node) |
+| `yolo11x.pt` | YOLO alternative weight |
+| `coco.yaml` | YOLO dataset configuration |
 
-Sources: the Haar cascade, the face-detector prototxt and the caffemodel come from the [OpenCV repository](https://github.com/opencv/opencv); the YOLO weights from [Ultralytics](https://github.com/ultralytics/assets/releases).
-
-Note that `object_detection.py` loads **`config/yolo11n.pt`** and `config/coco8.yaml`, while `setup.py` installs `yolo11x.pt` and `coco.yaml`. Add `yolo11n.pt` to `config/` as well, or the YOLO node cannot find its model.
+The config folder also contains `yolo11m.pt` and `yolo11l.pt` as alternative YOLO weights. The Haar cascade and face-detector files come from the [OpenCV repository](https://github.com/opencv/opencv); the YOLO weights come from [Ultralytics](https://github.com/ultralytics/assets/releases). The node loads `yolo11n.pt`; its `coco8.yaml` path is currently unused.
 
 After adding or changing model files, rebuild:
 ```bash
